@@ -9,7 +9,8 @@ end
 #some tools
 
 function printstate(state,ED::EDtable,tol=1E-12)
-dim=length(state)
+dim=ED.dim
+L=ED.L
 for i=1:dim
     if abs(state[i])>tol
         println(state[i],"\t",num2basis(ED.state[i],L))
@@ -48,12 +49,12 @@ function trans(a::Int64,L::Int64,base=2)
     return basis2num(Tbasis,base)
 end
 
-function Op_translation(vec,ED)
+function Op_translation(vec,ED,base=2)
     outvec=zeros(eltype(vec),ED.dim)
     for i=1:ED.dim
        a=ED.state[i]
-       Ta=trans(a,ED.L)
-       outvec[ED.index[i]]+=vec[i]  
+       Ta=trans(a,ED.L,base)
+       outvec[ED.index[Ta]]+=vec[i]  
     end
     return outvec
 end
