@@ -21,7 +21,7 @@ function Svon(LA,ψ,ED) #calculate von Neumann entropy with subsys LA of a pure 
     return EE
 end
 
-function Sparsity(LA,ψ,thres=1E-12,ED) #calculate the sparsity a pure state ψ
+function Sparsity(LA,ψ,ED,thres=1E-12) #calculate the sparsity a pure state ψ
     L=ED.L
     LB=L-LA
     M=zeros(2^LA,2^LB)
