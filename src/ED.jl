@@ -8,14 +8,38 @@ struct EDtable
 end
 #some tools
 
-function printstate(state,ED::EDtable,tol=1E-12)
+function printstate(state,ED::EDtable;tol=1E-12,base=2)
 dim=ED.dim
 L=ED.L
 for i=1:dim
     if abs(state[i])>tol
-        println(state[i],"\t",num2basis(ED.state[i],L))
+        println(state[i],"\t",num2basis(ED.state[i],L,base))
     end
 end    
+end
+
+#Loading EDdata if exist; if not, diagonalize it
+function EDdata(H,EDfilename)
+    if isfile(EDfilename)
+    EDfile=open(EDfilename,"r")
+    readdata=deserialize(EDfile)
+    E=readdata["E"]
+    S=readdata["S"]
+    readdata=0;
+    close(EDfile)
+else
+    println("no file: Doing ED calculation.")
+sol=eigen(H);
+E=sol.values;
+S=sol.vectors;
+EDdata=Dict()
+EDdata["E"]=E;
+EDdata["S"]=S;
+EDfile=open(EDfilename,"w")
+serialize(EDfile,EDdata)
+close(EDfile)
+end
+   return E,S 
 end
 
 
