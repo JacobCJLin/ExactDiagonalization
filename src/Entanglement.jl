@@ -1,13 +1,13 @@
 #functions for entanglement calculation
-function Svon(LA,ψ,ED) #calculate von Neumann entropy with subsys LA of a pure state ψ
+function Svon(LA,ψ,ED,base=2) #calculate von Neumann entropy with subsys LA of a pure state ψ
     L=ED.L
     LB=L-LA
-    M=zeros(2^LA,2^LB)
-    for i=1:2^LA, j=1:2^LB
-        intA=num2basis(i-1,LA);
-        intB=num2basis(j-1,LB);
+    M=zeros(base^LA,base^LB)
+    for i=1:base^LA, j=1:base^LB
+        intA=num2basis(i-1,LA,base);
+        intB=num2basis(j-1,LB,base);
         append!(intA,intB)
-        sta=basis2num(intA)
+        sta=basis2num(intA,base)
         
         if haskey(ED.index,sta)
             M[i,j]=ψ[ED.index[sta]]
@@ -21,15 +21,15 @@ function Svon(LA,ψ,ED) #calculate von Neumann entropy with subsys LA of a pure 
     return EE
 end
 
-function Sparsity(LA,ψ,ED,thres=1E-12) #calculate the sparsity a pure state ψ
+function Sparsity(LA,ψ,ED,base=2,thres=1E-12) #calculate the sparsity a pure state ψ
     L=ED.L
     LB=L-LA
-    M=zeros(2^LA,2^LB)
-    for i=1:2^LA, j=1:2^LB
-        intA=num2basis(i-1,LA);
-        intB=num2basis(j-1,LB);
+    M=zeros(base^LA,base^LB)
+    for i=1:base^LA, j=1:base^LB
+        intA=num2basis(i-1,LA,base);
+        intB=num2basis(j-1,LB,base);
         append!(intA,intB)
-        sta=basis2num(intA)
+        sta=basis2num(intA,base)
         
         if haskey(ED.index,sta)
             M[i,j]=ψ[ED.index[sta]]
@@ -44,19 +44,19 @@ function Sparsity(LA,ψ,ED,thres=1E-12) #calculate the sparsity a pure state ψ
             break
         end
     end
-    return rk/2^LA
+    return rk
 
 end
 
-function EntSpectrum(LA,ψ,ED) #calculate the sparsity a pure state ψ
+function EntSpectrum(LA,ψ,ED,base=2) #calculate the sparsity a pure state ψ
     L=ED.L
     LB=L-LA
-    M=zeros(2^LA,2^LB)
-    for i=1:2^LA, j=1:2^LB
-        intA=num2basis(i-1,LA);
-        intB=num2basis(j-1,LB);
+    M=zeros(base^LA,base^LB)
+    for i=1:base^LA, j=1:base^LB
+        intA=num2basis(i-1,LA,base);
+        intB=num2basis(j-1,LB,base);
         append!(intA,intB)
-        sta=basis2num(intA)
+        sta=basis2num(intA,base)
         
         if haskey(ED.index,sta)
             M[i,j]=ψ[ED.index[sta]]
