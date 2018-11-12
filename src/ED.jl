@@ -97,7 +97,7 @@ end
 function evolution(E,S,Δt)
     eiEt=exp.(-1.0im*Δt*E)
     dim1,dim2=size(S)
-    U=zeros(complex(Float64),dim,dim)
+    U=zeros(complex(Float64),dim1,dim1)
     for i=1:dim1, j=1:dim1
        for k=1:dim2
         U[i,j]+= S[i,k]*eiEt[k]*conj(S[j,k])
