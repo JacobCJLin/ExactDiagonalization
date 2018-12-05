@@ -65,7 +65,7 @@ function basis2num(basis::Array{Int64},base=2)
 end
 
 #translation operation
-function trans(a::Int64,L::Int64,base=2)
+function translation(a::Int64,L::Int64,base=2)
     basis=num2basis(a,L,base)
     Tbasis=zeros(Int64,L);
     Tbasis[1]=basis[L];
@@ -77,7 +77,7 @@ function Op_translation(vec,ED,base=2)
     outvec=zeros(eltype(vec),ED.dim)
     for i=1:ED.dim
        a=ED.state[i]
-       Ta=trans(a,ED.L,base)
+       Ta=translation(a,ED.L,base)
        outvec[ED.index[Ta]]+=vec[i]  
     end
     return outvec
@@ -137,7 +137,7 @@ function GenerateEDK(L::Int64,K::Int64,base=2;tol=1E-14,statecheck= i -> true)
         leaststate=i;
         tempstate=i;
         for r=1:L-1   #loop over the translational operation; if the state is the smallest then it's representative
-            tempstate=trans(tempstate,L,base);
+            tempstate=translation(tempstate,L,base);
             tempstate<leaststate ? leaststate=tempstate : nothing
         end
          if leaststate==i
@@ -145,7 +145,7 @@ function GenerateEDK(L::Int64,K::Int64,base=2;tol=1E-14,statecheck= i -> true)
             tempnorm=1;
             tempstate=i;
             for r=1:L-1
-                tempstate=trans(tempstate,L,base);
+                tempstate=translation(tempstate,L,base);
                 tempstate==i ? tempnorm+=exp(2im*π*K*r/L) : nothing
             end
             
@@ -178,7 +178,7 @@ function GenerateEDKI(L::Int64,K::Int64,Inv::Bool,base=2;tol=1E-12,statecheck= i
         Itempstate=inversion(tempstate,L,base)
         Itempstate<leaststate ? leaststate=Itempstate : nothing
         for r=1:L-1   #loop over the translational operation; if the state is the smallest then it's representative
-            tempstate=trans(tempstate,L,base);
+            tempstate=translation(tempstate,L,base);
             tempstate<leaststate ? leaststate=tempstate : nothing
             Itempstate=inversion(tempstate,L,base)   #checked the inversion symmetry
             Itempstate<leaststate ? leaststate=Itempstate : nothing
@@ -190,7 +190,7 @@ function GenerateEDKI(L::Int64,K::Int64,Inv::Bool,base=2;tol=1E-12,statecheck= i
             Itempstate=inversion(tempstate,L,base)
             Itempstate==i ? tempnorm+=Isgn : nothing
             for r=1:L-1
-                tempstate=trans(tempstate,L,base);
+                tempstate=translation(tempstate,L,base);
                 tempstate==i ? tempnorm+=exp(2im*π*K*r/L) : nothing
                 Itempstate=inversion(tempstate,L,base)
                 Itempstate==i ? tempnorm+=Isgn*exp(2im*π*K*r/L) : nothing
@@ -217,7 +217,7 @@ function findrep(a::Int64,K::Int64,ED::EDtable,base=2)
         if haskey(ED.index,tempstate)
             return tempstate,exp(2im*π*r*K/L) 
         else
-            tempstate=trans(tempstate,L,base)
+            tempstate=translation(tempstate,L,base)
         end
     end
     return -1,0
@@ -235,7 +235,7 @@ function findrep(a::Int64,K::Int64,Inv::Bool,ED::EDtable,base=2)
         elseif haskey(ED.index,Itempstate)
             return Itempstate,Isgn*exp(2im*π*r*K/L)    
         else
-            tempstate=trans(tempstate,L,base)
+            tempstate=translation(tempstate,L,base)
         end
     end
     return -1,0

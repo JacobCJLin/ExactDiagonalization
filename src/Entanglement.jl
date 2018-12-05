@@ -2,7 +2,7 @@
 function Svon(LA,ψ,ED,base=2) #calculate von Neumann entropy with subsys LA of a pure state ψ
     L=ED.L
     LB=L-LA
-    M=zeros(base^LA,base^LB)
+    M=zeros(eltype(ψ),base^LA,base^LB)
     for i=1:base^LA, j=1:base^LB
         intA=num2basis(i-1,LA,base);
         intB=num2basis(j-1,LB,base);
@@ -24,7 +24,7 @@ end
 function Sparsity(LA,ψ,ED,base=2,thres=1E-12) #calculate the sparsity a pure state ψ
     L=ED.L
     LB=L-LA
-    M=zeros(base^LA,base^LB)
+    M=zeros(eltype(ψ),base^LA,base^LB)
     for i=1:base^LA, j=1:base^LB
         intA=num2basis(i-1,LA,base);
         intB=num2basis(j-1,LB,base);
@@ -51,7 +51,7 @@ end
 function EntSpectrum(LA,ψ,ED,base=2) #calculate the sparsity a pure state ψ
     L=ED.L
     LB=L-LA
-    M=zeros(base^LA,base^LB)
+    M=zeros(eltype(ψ),base^LA,base^LB)
     for i=1:base^LA, j=1:base^LB
         intA=num2basis(i-1,LA,base);
         intB=num2basis(j-1,LB,base);
