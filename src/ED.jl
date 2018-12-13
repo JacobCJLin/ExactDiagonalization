@@ -93,6 +93,16 @@ function inversion(a::Int64,L::Int64,base=2)
     return basis2num(newarray,base)
 end
 
+function Op_inversion(vec,ED,base=2)
+    outvec=zeros(eltype(vec),ED.dim)
+    for i=1:ED.dim
+       a=ED.state[i]
+       Ia=translation(a,ED.L,base)
+       outvec[ED.index[Ia]]+=vec[i]  
+    end
+    return outvec 
+end
+
 #function for calculate ED evolution
 function evolution(E,S,Δt)
     eiEt=exp.(-1.0im*Δt*E)
