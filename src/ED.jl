@@ -4,13 +4,14 @@ struct EDtable
     index::Dict
     Snorm;
     dim::Int64
-    L::Int64
+    base::Int64
+    L
 end
 #some tools
-
-function printstate(state,ED::EDtable;tol=1E-12,base=2)
+function printstate(state,ED::EDtable;tol=1E-12)
 dim=ED.dim
 L=ED.L
+base=ED.base
 for i=1:dim
     if abs(state[i])>tol
         println(state[i],"\t",num2basis(ED.state[i],L,base))
@@ -45,7 +46,7 @@ end
 
 #functions for ED
 #functions
-function num2basis(a::Int64,L::Int64,base=2) #convert a state code a to basis, e.g. 1=0000001
+function code2basis(a::Int64,L::Int64,base=2) #convert a state code a to basis, e.g. 1=0000001
     basis=zeros(Int64,L);
     temp=a;
     for i=1:L
@@ -55,8 +56,10 @@ function num2basis(a::Int64,L::Int64,base=2) #convert a state code a to basis, e
     return basis;    
 end
 
+num2basis(a::Int64,L::Int64,base=2)=code2basis(a,L,base)
+
 #basis to number converter
-function basis2num(basis::Array{Int64},base=2)
+function basis2code(basis::Array{Int64},base=2)
     temp=0;
     for i=1:length(basis)
         temp+=basis[i]*base^(i-1);
@@ -64,40 +67,42 @@ function basis2num(basis::Array{Int64},base=2)
     return temp;  
 end
 
+basis2num(basis::Array{Int64},base=2)=basis2code(basis,base)
+
 #translation operation
-function translation(a::Int64,L::Int64,base=2)
-    basis=num2basis(a,L,base)
+function translation_code(a::Int64,L::Int64,base=2)
+    basis=code2basis(a,L,base)
     Tbasis=zeros(Int64,L);
     Tbasis[1]=basis[L];
     Tbasis[2:L]=basis[1:L-1];
-    return basis2num(Tbasis,base)
+    return basis2code(Tbasis,base)
 end
 
-function Op_translation(vec,ED,base=2)
+function translation(vec,ED)
     outvec=zeros(eltype(vec),ED.dim)
     for i=1:ED.dim
        a=ED.state[i]
-       Ta=translation(a,ED.L,base)
+       Ta=translation_code(a,ED.L,ED.base)
        outvec[ED.index[Ta]]+=vec[i]  
     end
     return outvec
 end
 
 #space inversion operation
-function inversion(a::Int64,L::Int64,base=2)
-   oldarray=num2basis(a,L,base)
+function inversion_code(a::Int64,L::Int64,base=2)
+   oldarray=code2basis(a,L,base)
    newarray=zeros(Int64,L)
     for i=1:L
     newarray[i]=oldarray[L-i+1]
     end
-    return basis2num(newarray,base)
+    return basis2code(newarray,base)
 end
 
-function Op_inversion(vec,ED,base=2)
+function inversion(vec,ED)
     outvec=zeros(eltype(vec),ED.dim)
     for i=1:ED.dim
        a=ED.state[i]
-       Ia=translation(a,ED.L,base)
+       Ia=inversion_code(a,ED.L,ED.base)
        outvec[ED.index[Ia]]+=vec[i]  
     end
     return outvec 
@@ -117,6 +122,10 @@ function evolution(E,S,Δt)
 end
 
 
+
+##################################################################################
+#### Old
+##################################################################################
 #generate states without any symmetry consideration
 function GenerateED(L::Int64,base=2;statecheck= i -> true)
     fulldim=base^L
@@ -131,7 +140,7 @@ function GenerateED(L::Int64,base=2;statecheck= i -> true)
         end
     end
     dim=counter
-    ED=EDtable(state,index,nothing,dim,L)
+    ED=EDtable(state,index,nothing,dim,base,L)
     return ED
 end
 
@@ -147,7 +156,7 @@ function GenerateEDK(L::Int64,K::Int64,base=2;tol=1E-14,statecheck= i -> true)
         leaststate=i;
         tempstate=i;
         for r=1:L-1   #loop over the translational operation; if the state is the smallest then it's representative
-            tempstate=translation(tempstate,L,base);
+            tempstate=translation_code(tempstate,L,base);
             tempstate<leaststate ? leaststate=tempstate : nothing
         end
          if leaststate==i
@@ -155,7 +164,7 @@ function GenerateEDK(L::Int64,K::Int64,base=2;tol=1E-14,statecheck= i -> true)
             tempnorm=1;
             tempstate=i;
             for r=1:L-1
-                tempstate=translation(tempstate,L,base);
+                tempstate=translation_code(tempstate,L,base);
                 tempstate==i ? tempnorm+=exp(2im*π*K*r/L) : nothing
             end
             
@@ -169,7 +178,7 @@ function GenerateEDK(L::Int64,K::Int64,base=2;tol=1E-14,statecheck= i -> true)
         end  #end statecheck  
     end
     dim=counter
-    ED=EDtable(state,index,Snorm,dim,L)
+    ED=EDtable(state,index,Snorm,dim,base,L)
     return ED
 end
 
@@ -185,24 +194,24 @@ function GenerateEDKI(L::Int64,K::Int64,Inv::Bool,base=2;tol=1E-12,statecheck= i
         if statecheck(i)
         leaststate=i;
         tempstate=i;
-        Itempstate=inversion(tempstate,L,base)
+        Itempstate=inversion_code(tempstate,L,base)
         Itempstate<leaststate ? leaststate=Itempstate : nothing
         for r=1:L-1   #loop over the translational operation; if the state is the smallest then it's representative
-            tempstate=translation(tempstate,L,base);
+            tempstate=translation_code(tempstate,L,base);
             tempstate<leaststate ? leaststate=tempstate : nothing
-            Itempstate=inversion(tempstate,L,base)   #checked the inversion symmetry
+            Itempstate=inversion_code(tempstate,L,base)   #checked the inversion symmetry
             Itempstate<leaststate ? leaststate=Itempstate : nothing
         end
          if leaststate==i
             #determine it's statenorm
             tempnorm=1;
             tempstate=i;
-            Itempstate=inversion(tempstate,L,base)
+            Itempstate=inversion_code(tempstate,L,base)
             Itempstate==i ? tempnorm+=Isgn : nothing
             for r=1:L-1
-                tempstate=translation(tempstate,L,base);
+                tempstate=translation_code(tempstate,L,base);
                 tempstate==i ? tempnorm+=exp(2im*π*K*r/L) : nothing
-                Itempstate=inversion(tempstate,L,base)
+                Itempstate=inversion_code(tempstate,L,base)
                 Itempstate==i ? tempnorm+=Isgn*exp(2im*π*K*r/L) : nothing
             end
             
@@ -216,7 +225,7 @@ function GenerateEDKI(L::Int64,K::Int64,Inv::Bool,base=2;tol=1E-12,statecheck= i
         end
     end
     dim=counter
-    ED=EDtable(state,index,Snorm,dim,L)
+    ED=EDtable(state,index,Snorm,dim,base,L)
     return ED
 end
 
@@ -227,7 +236,7 @@ function findrep(a::Int64,K::Int64,ED::EDtable,base=2)
         if haskey(ED.index,tempstate)
             return tempstate,exp(2im*π*r*K/L) 
         else
-            tempstate=translation(tempstate,L,base)
+            tempstate=translation_code(tempstate,L,base)
         end
     end
     return -1,0
@@ -239,13 +248,13 @@ function findrep(a::Int64,K::Int64,Inv::Bool,ED::EDtable,base=2)
     tempstate=a;
    
     for r=0:L-1
-            Itempstate=inversion(tempstate,L,base)
+            Itempstate=inversion_code(tempstate,L,base)
         if haskey(ED.index,tempstate)
             return tempstate,exp(2im*π*r*K/L) 
         elseif haskey(ED.index,Itempstate)
             return Itempstate,Isgn*exp(2im*π*r*K/L)    
         else
-            tempstate=translation(tempstate,L,base)
+            tempstate=translation_code(tempstate,L,base)
         end
     end
     return -1,0
