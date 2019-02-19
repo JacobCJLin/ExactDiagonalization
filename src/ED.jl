@@ -43,6 +43,20 @@ end
    return E,S 
 end
 
+#Loading EDdata if exist
+function loadEDdata(EDfilename)
+    if isfile(EDfilename)
+    EDfile=open(EDfilename,"r")
+    readdata=deserialize(EDfile)
+    E=readdata["E"]
+    S=readdata["S"]
+    readdata=0;
+    close(EDfile)
+    return E,S 
+    else
+    println("no file: ",EDfilename)
+    end
+end
 
 #functions for ED
 #functions
