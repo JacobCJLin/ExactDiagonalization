@@ -1,5 +1,44 @@
 #functions for entanglement calculation
-function Svon(LA,ψ,ED,base=2) #calculate von Neumann entropy with subsys LA of a pure state ψ
+function Svon_sym(LA,ψ,ED,symmetry,list) #calculate von Neumann entropy with subsys LA of a pure state ψ
+    base=ED.base
+    L=ED.L
+    LB=L-LA
+    M=zeros(eltype(ψ),base^LA,base^LB)
+    for i in eachindex(ψ)
+        G,gofr,χg=symmetry(ED.state[i])
+        G==1 ? Sn=1 : Sn=ED.Snorm[i]
+        for n=1:G
+           M[list[gofr[n]]...]+=ψ[i]*χg[n]/sqrt(G)/Sn
+        end
+    end
+    
+    U,S,V=svd(M)
+    EE=0
+    for i=1:length(S)
+        abs(S[i])>1.0E-30 ? EE+=-S[i]^2*log(S[i]^2) : nothing
+    end
+    return EE
+end
+
+function reshapelist(LA,ED)
+    list=Dict();
+    base=ED.base
+    L=ED.L
+    LB=L-LA 
+    for i=1:base^LA, j=1:base^LB
+        intA=num2basis(i-1,LA,base);
+        intB=num2basis(j-1,LB,base);
+        append!(intA,intB)
+        sta=basis2num(intA,base)
+        list[sta]=(i,j)
+    end
+    return list
+end
+
+
+#functions for entanglement calculation
+function Svon(LA,ψ,ED) #calculate von Neumann entropy with subsys LA of a pure state ψ
+    base=ED.base
     L=ED.L
     LB=L-LA
     M=zeros(eltype(ψ),base^LA,base^LB)
@@ -21,7 +60,8 @@ function Svon(LA,ψ,ED,base=2) #calculate von Neumann entropy with subsys LA of 
     return EE
 end
 
-function Sparsity(LA,ψ,ED,base=2,thres=1E-12) #calculate the sparsity a pure state ψ
+function Sparsity(LA,ψ,ED,thres=1E-12) #calculate the sparsity a pure state ψ
+    base=ED.base
     L=ED.L
     LB=L-LA
     M=zeros(eltype(ψ),base^LA,base^LB)
@@ -48,7 +88,8 @@ function Sparsity(LA,ψ,ED,base=2,thres=1E-12) #calculate the sparsity a pure st
 
 end
 
-function EntSpectrum(LA,ψ,ED,base=2) #calculate the sparsity a pure state ψ
+function EntSpectrum(LA,ψ,ED) #calculate the sparsity a pure state ψ
+    base=ED.base
     L=ED.L
     LB=L-LA
     M=zeros(eltype(ψ),base^LA,base^LB)

@@ -8,7 +8,7 @@ include("Entanglement.jl")
 export EDtable,printstate,code2basis,basis2code,num2basis,basis2num
 export translation_code,translation,inversion_code,inversion,evolution,loadEDdata,EDdata
 export GenerateED,GenerateEDK,GenerateEDKI,findrep
-export Svon,Sparsity,EntSpectrum
+export reshapelist,Svon_sym,Svon,Sparsity,EntSpectrum
 
 
 
