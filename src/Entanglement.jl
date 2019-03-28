@@ -1,5 +1,5 @@
 #functions for entanglement calculation
-function Svon_sym(LA,ψ,ED,symmetry,list) #calculate von Neumann entropy with subsys LA of a pure state ψ
+function Svon_sym(LA,ψ,ED,symmetry) #calculate von Neumann entropy with subsys LA of a pure state ψ
     base=ED.base
     L=ED.L
     LB=L-LA
@@ -8,7 +8,9 @@ function Svon_sym(LA,ψ,ED,symmetry,list) #calculate von Neumann entropy with su
         G,gofr,χg=symmetry(ED.state[i])
         G==1 ? Sn=1 : Sn=ED.Snorm[i]
         for n=1:G
-           M[list[gofr[n]]...]+=ψ[i]*χg[n]/sqrt(G)/Sn
+           mi=div(gofr[n],base^LB)+1
+           mj=rem(gofr[n],base^LB)+1 
+           M[mi,mj]+=ψ[i]*χg[n]/sqrt(G)/Sn
         end
     end
     
