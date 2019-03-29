@@ -14,7 +14,7 @@ L=ED.L
 base=ED.base
 for i=1:dim
     if abs(state[i])>tol
-        println(state[i],"\t",num2basis(ED.state[i],L,base))
+        println(state[i],"\t",codetobasis(ED.state[i],L,base))
     end
 end    
 end
@@ -60,7 +60,7 @@ end
 
 #functions for ED
 #functions
-function code2basis(a::Int64,L::Int64,base=2) #convert a state code a to basis, e.g. 1=0000001
+function codetobasis(a::Int64,L::Int64,base=2) #convert a state code a to basis, e.g. 1=0000001
     basis=zeros(Int64,L);
     temp=a;
     for i=1:L
@@ -70,10 +70,10 @@ function code2basis(a::Int64,L::Int64,base=2) #convert a state code a to basis, 
     return basis;    
 end
 
-num2basis(a::Int64,L::Int64,base=2)=code2basis(a,L,base)
+num2basis(a::Int64,L::Int64,base=2)=codetobasis(a,L,base)
 
 #basis to number converter
-function basis2code(basis::Array{Int64},base=2)
+function basistocode(basis::Array{Int64},base=2)
     temp=0;
     for i=1:length(basis)
         temp+=basis[i]*base^(i-1);
@@ -81,15 +81,15 @@ function basis2code(basis::Array{Int64},base=2)
     return temp;  
 end
 
-basis2num(basis::Array{Int64},base=2)=basis2code(basis,base)
+basis2num(basis::Array{Int64},base=2)=basistocode(basis,base)
 
 #translation operation
 function translation_code(a::Int64,L::Int64,base=2)
-    basis=code2basis(a,L,base)
+    basis=codetobasis(a,L,base)
     Tbasis=zeros(Int64,L);
     Tbasis[1]=basis[L];
     Tbasis[2:L]=basis[1:L-1];
-    return basis2code(Tbasis,base)
+    return basistocode(Tbasis,base)
 end
 
 function translation(vec,ED)
@@ -104,12 +104,12 @@ end
 
 #space inversion operation
 function inversion_code(a::Int64,L::Int64,base=2)
-   oldarray=code2basis(a,L,base)
+   oldarray=codetobasis(a,L,base)
    newarray=zeros(Int64,L)
     for i=1:L
     newarray[i]=oldarray[L-i+1]
     end
-    return basis2code(newarray,base)
+    return basistocode(newarray,base)
 end
 
 function inversion(vec,ED)
@@ -140,6 +140,7 @@ end
 ##################################################################################
 #### Old
 ##################################################################################
+
 #generate states without any symmetry consideration
 function GenerateED(L::Int64,base=2;statecheck= i -> true)
     fulldim=base^L
