@@ -1,6 +1,6 @@
 module ExactDiagonalization
 
-using LinearAlgebra, JLD
+using LinearAlgebra, Serialization
 
 include("ED.jl")
 include("Entanglement.jl")
