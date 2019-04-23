@@ -135,6 +135,36 @@ function evolution(E,S,Δt)
     return U
 end
 
+function generateEDsym(L::Int64,symf,base=2;tol=1E-14,statecheck= i -> true)
+   #L: total number of sites
+   #symf: function for the symmetry operation, requiring input ("code", L, base), output ("codelist","χlist")  
+    fulldim=base^L
+    counter=0;
+    state=Dict();index=Dict();Snorm=Dict(); 
+    for i=0:fulldim-1
+        if statecheck(i) 
+            codelist,χlist=symf(i,L,base)
+            minimum(codelist)!= i ? continue : nothing
+            indlist=findall(x -> x==i , codelist)
+            snormsq=sum(χlist[indlist])
+            if abs(snormsq) > tol
+            counter+=1;
+            state[counter]=i;
+            index[i]=counter;
+            Snorm[counter]=sqrt(snormsq)    
+            end
+        end 
+    end
+    dim=counter
+    ED=EDtable(state,index,Snorm,dim,base,L)
+    return ED
+end
+
+function findrepsym(a,L,symf,base=2)
+    codelist,χlist=symf(a,L,base)
+    ind=findmin(codelist)
+    return ind[1], χlist[ind[2]]
+end
 
 
 ##################################################################################
