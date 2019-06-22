@@ -166,13 +166,8 @@ function findrepsym(a,L,symf,base=2)
     return ind[1], χlist[ind[2]]
 end
 
-
-##################################################################################
-#### Old
-##################################################################################
-
 #generate states without any symmetry consideration
-function GenerateED(L::Int64,base=2;statecheck= i -> true)
+function generateED(L::Int64,base=2;statecheck= i -> true)
     fulldim=base^L
     counter=0;
     state=Dict()
@@ -188,6 +183,13 @@ function GenerateED(L::Int64,base=2;statecheck= i -> true)
     ED=EDtable(state,index,nothing,dim,base,L)
     return ED
 end
+
+
+##################################################################################
+#### Old
+##################################################################################
+
+
 
 #generate states with momentum resolution
 function GenerateEDK(L::Int64,K::Int64,base=2;tol=1E-14,statecheck= i -> true)
