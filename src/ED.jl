@@ -2,7 +2,7 @@
 struct EDtable
     state::Dict
     index::Dict
-    Snorm;
+    normsq;
     dim::Int64
     base::Int64
     L
@@ -125,7 +125,7 @@ end
 #function for calculate ED evolution
 function evolution(E,S,Δt)
     eiEt=exp.(-1.0im*Δt*E)
-    Ut=S*Diagonal(eiEt)*S'
+    U=S*Diagonal(eiEt)*S'
     #dim1,dim2=size(S)
     #U=zeros(complex(Float64),dim1,dim1)
     #for i=1:dim1, j=1:dim1
@@ -141,7 +141,7 @@ function generateEDsym(L::Int64,symf,base=2;tol=1E-14,statecheck= i -> true)
    #symf: function for the symmetry operation, requiring input ("code", L, base), output ("codelist","χlist")  
     fulldim=base^L
     counter=0;
-    state=Dict();index=Dict();Snorm=Dict(); 
+    state=Dict();index=Dict();normsq=Dict(); 
     for i=0:fulldim-1
         if statecheck(i) 
             codelist,χlist=symf(i,L,base)
@@ -152,12 +152,12 @@ function generateEDsym(L::Int64,symf,base=2;tol=1E-14,statecheck= i -> true)
             counter+=1;
             state[counter]=i;
             index[i]=counter;
-            Snorm[counter]=sqrt(snormsq)    
+            normsq[counter]=snormsq    
             end
         end 
     end
     dim=counter
-    ED=EDtable(state,index,Snorm,dim,base,L)
+    ED=EDtable(state,index,normsq,dim,base,L)
     return ED
 end
 
@@ -184,6 +184,7 @@ function generateED(L::Int64,base=2;statecheck= i -> true)
     ED=EDtable(state,index,nothing,dim,base,L)
     return ED
 end
+
 
 
 ##################################################################################
