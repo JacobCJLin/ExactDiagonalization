@@ -226,7 +226,7 @@ function generateEDsym(L::Int64,symf,base=2;tol=1E-14,statecheck= i -> true,symf
     for i=0:fulldim-1
         if statecheck(i) 
             codelist,χlist=symf(i,L,base)
-            if !isnothing(a)
+            if !isnothing(symfile)
             symlist[i,"code"]=codelist    
             symlist[i,"χ"]=χlist
             end    
@@ -243,7 +243,7 @@ function generateEDsym(L::Int64,symf,base=2;tol=1E-14,statecheck= i -> true,symf
     end
     dim=counter
     ED=EDtable(state,index,normsq,dim,base,L)
-    if !isnothing(a)
+    if !isnothing(symfile)
     return ED,symlist
     else
     return ED
