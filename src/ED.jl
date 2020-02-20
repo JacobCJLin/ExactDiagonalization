@@ -20,19 +20,47 @@ end
 end
 
 #Loading EDtable data if exist; if not, construct it
-function EDtabledata(L,symf,statecheck,filename)
+#function EDtabledata(L,symf,statecheck,filename)
+#    if isfile(filename)
+#    EDfile=open(filename,"r")
+#    ED=deserialize(EDfile)
+#    close(EDfile)  
+#    else
+#    println("no file: Construct EDtable.")
+#    ED=generateEDsym(L,symf,statecheck=statecheck)
+#    EDfile=open(filename,"w")
+#    serialize(EDfile,ED)
+#    close(EDfile)
+#    end    
+#    return ED
+#end
+
+#Loading EDtable data if exist; if not, construct it
+function EDtabledata(L,symf,statecheck,filename;symfile = nothing)
     if isfile(filename)
     EDfile=open(filename,"r")
     ED=deserialize(EDfile)
     close(EDfile)  
     else
     println("no file: Construct EDtable.")
-    ED=generateEDsym(L,symf,statecheck=statecheck)
+        if isnothing(symfile)
+        ED=generateEDsym(L,symf,statecheck=statecheck)
+        else
+        ED,symlist=generateEDsym(L,symf,statecheck=statecheck,symfile=symfile)
+        savesymfile(symlist,symfile)
+        end        
     EDfile=open(filename,"w")
     serialize(EDfile,ED)
     close(EDfile)
-    end    
+    end
+    
+    if isnothing(symfile)
     return ED
+    else
+    symlist=loadsymfile(symfile)    
+    return ED, symlist  
+    end
+    
 end
 
 #Loading EDtabledata if exist
@@ -164,15 +192,44 @@ function evolution(E,S,Δt)
     return U
 end
 
-function generateEDsym(L::Int64,symf,base=2;tol=1E-14,statecheck= i -> true)
+#function generateEDsym(L::Int64,symf,base=2;tol=1E-14,statecheck= i -> true)
+   #L: total number of sites
+   #symf: function for the symmetry operation, requiring input ("code", L, base), output ("codelist","χlist")  
+#    fulldim=base^L
+#    counter=0;
+#    state=Dict();index=Dict();normsq=Dict(); 
+#    for i=0:fulldim-1
+#        if statecheck(i) 
+#            codelist,χlist=symf(i,L,base)
+#            minimum(codelist)!= i ? continue : nothing
+#            indlist=findall(x -> x==i , codelist)
+#            snormsq=sum(χlist[indlist])
+#            if abs(snormsq) > tol
+#            counter+=1;
+#            state[counter]=i;
+#            index[i]=counter;
+#            normsq[counter]=snormsq    
+#            end
+#        end 
+#    end
+#    dim=counter
+#    ED=EDtable(state,index,normsq,dim,base,L)
+#    return ED
+#end
+
+function generateEDsym(L::Int64,symf,base=2;tol=1E-14,statecheck= i -> true,symfile = nothing)
    #L: total number of sites
    #symf: function for the symmetry operation, requiring input ("code", L, base), output ("codelist","χlist")  
     fulldim=base^L
     counter=0;
-    state=Dict();index=Dict();normsq=Dict(); 
+    state=Dict();index=Dict();normsq=Dict();symlist=Dict() 
     for i=0:fulldim-1
         if statecheck(i) 
             codelist,χlist=symf(i,L,base)
+            if !isnothing(a)
+            symlist[i,"code"]=codelist    
+            symlist[i,"χ"]=χlist
+            end    
             minimum(codelist)!= i ? continue : nothing
             indlist=findall(x -> x==i , codelist)
             snormsq=sum(χlist[indlist])
@@ -186,13 +243,41 @@ function generateEDsym(L::Int64,symf,base=2;tol=1E-14,statecheck= i -> true)
     end
     dim=counter
     ED=EDtable(state,index,normsq,dim,base,L)
+    if !isnothing(a)
+    return ED,symlist
+    else
     return ED
+    end
 end
 
 function findrepsym(a,L,symf,base=2)
     codelist,χlist=symf(a,L,base)
     ind=findmin(codelist)
     return ind[1], χlist[ind[2]]
+end
+
+function findrepsymwithlist(a,symlist)
+    codelist=symlist[a,"code"]
+    χlist=symlist[a,"χ"]
+    ind=findmin(codelist)
+    return ind[1], χlist[ind[2]]
+end
+
+function savesymfile(symlist,symfilename)
+    file=open(symfilename,"w")
+    serialize(file,symlist)
+    close(file)
+end
+
+function loadsymfile(symfilename)
+    if isfile(symfilename)
+    file=open(symfilename,"r")
+    symlist=deserialize(file)
+    close(file)
+    return symlist
+    else
+        error("no symmetry file!")
+    end
 end
 
 #generate states without any symmetry consideration
