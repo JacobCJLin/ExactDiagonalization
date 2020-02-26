@@ -36,42 +36,32 @@ end
 #end
 
 #Loading EDtable data if exist; if not, construct it
-function EDtabledata(L,symf,statecheck,filename;symfile = nothing)
+function EDtabledata(L,symf,statecheck,filename)
     if isfile(filename)
     EDfile=open(filename,"r")
     ED=deserialize(EDfile)
     close(EDfile)  
     else
     println("no file: Construct EDtable.")
-        if isnothing(symfile)
-        ED=generateEDsym(L,symf,statecheck=statecheck)
-        else
-        ED,symlist=generateEDsym(L,symf,statecheck=statecheck,symfile=symfile)
-        savesymfile(symlist,symfile)
-        end        
+    ED=generateEDsym(L,symf,statecheck=statecheck)
     EDfile=open(filename,"w")
     serialize(EDfile,ED)
     close(EDfile)
     end
     
-    if isnothing(symfile)
     return ED
-    else
-    symlist=loadsymfile(symfile)    
-    return ED, symlist  
-    end
-    
+
 end
 
 #Loading EDtabledata if exist
-function loadEDtabledata(EDfilename)
+function loadEDtabledata(filename)
     if isfile(filename)
     EDfile=open(filename,"r")
     ED=deserialize(EDfile)
     close(EDfile)
     return ED 
     else
-    println("no file: ",EDfilename)
+    println("no file: ",filename)
     end
 end
 
@@ -256,12 +246,7 @@ function findrepsym(a,L,symf,base=2)
     return ind[1], χlist[ind[2]]
 end
 
-function findrepsymwithlist(a,symlist)
-    codelist=symlist[a,"code"]
-    χlist=symlist[a,"χ"]
-    ind=findmin(codelist)
-    return ind[1], χlist[ind[2]]
-end
+
 
 function savesymfile(symlist,symfilename)
     file=open(symfilename,"w")
