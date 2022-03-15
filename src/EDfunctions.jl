@@ -4,7 +4,7 @@ struct EDtable
     index::Dict  #given a state code, output its index
     normsq;      #The norm square of the state
     dim::Int64   #dimension of the total Hilbert space 
-    N::Nit64     # number of sites
+    N::Int64     #number of sites
     d::Int64     #dimension of the local Hilbert space
 
 end

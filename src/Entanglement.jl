@@ -3,7 +3,7 @@ function reshapelist(subA,ED) #subA is the set of sites in subsystem A e.g. subA
     d=ED.d
     N=ED.N
     NA=length(subA)
-    fullsys=Array(1:N)
+    fullsys=Array{Int64}(1:N)
     subB=setdiff(fullsys,subA)
     NB=N-NA;
     dimA=d^NA;
@@ -11,9 +11,10 @@ function reshapelist(subA,ED) #subA is the set of sites in subsystem A e.g. subA
     for i=1:dimA, j=1:dimB
         basisA=codetobasis(i-1,NA,d);
         basisB=codetobasis(j-1,NB,d);
-        code=zeros(N);
-        code[subA]=basisA
-        code[subB]=basisB
+        basis=zeros(Int64,N);
+        basis[subA]=basisA
+        basis[subB]=basisB
+        code=basistocode(basis,d)
         list[code]=(i,j)
     end
     return list,dimA,dimB
@@ -23,7 +24,7 @@ function reshapeψ(ψ,subA,ED) #subA is the set of sites in subsystem A e.g. sub
     list,dimA,dimB=reshapelist(subA,ED);
     Mψ=zeros(dimA,dimB)
     for code in keys(list)
-        M[list[code]...]=ψ[ED.index[code]];
+        Mψ[list[code]...]=ψ[ED.index[code]];
     end
     return Mψ
 end
@@ -36,7 +37,7 @@ end
 
 function entanglemententropy(ψ,subA,ED)
     _,spec,_ = Schmidtdecomposition(ψ,subA,ED)
-    return - spec .^2 .* (log.(spec.^2))
+    return -sum(spec .^2 .* (log.(spec.^2)))
 end
 
 

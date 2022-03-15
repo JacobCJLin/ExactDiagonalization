@@ -7,7 +7,7 @@ include("1dsymmetry.jl")
 include("entanglement.jl")
 
 #functions from "EDfunctions.jl"
-export EDtable,printψ,codetobasis,basistocode,generateHmat,generateUt
+export EDtable,generateED,printψ,codetobasis,basistocode,generateHmat,generateUt
 
 export reshapelist,reshapeψ,Schmidtvalues,entanglemententropy
 
