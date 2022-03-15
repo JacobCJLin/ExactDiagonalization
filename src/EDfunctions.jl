@@ -1,20 +1,59 @@
 #type for ED calculation
 struct EDtable
-    state::Dict  #given an index, output the state code
+    code::Dict   #given an index, output the state code
     index::Dict  #given a state code, output its index
     normsq;      #The norm square of the state
-    dim::Int64   #dimension of the Hilbert space
-    base::Int64
-    L
+    dim::Int64   #dimension of the total Hilbert space 
+    N::Nit64     # number of sites
+    d::Int64     #dimension of the local Hilbert space
+
+end
+
+#convert a state code a to computational basis, e.g. 1=0000001
+function codetobasis(a::Int64,N::Int64,d=2) 
+    basis=zeros(Int64,N);
+    temp=a;
+    for i=1:N
+        basis[i]=rem(temp,d);
+        temp=div(temp,d);
+    end
+    return basis;    
+end
+
+#basis to number converter
+function basistocode(basis::Array{Int64},d=2)
+    temp=0;
+    for i=1:length(basis)
+        temp+=basis[i]*d^(i-1);
+    end    
+    return temp;  
+end
+
+#generate states without any symmetry consideration
+function generateED(N::Int64,d=2;statecheck= i -> true)
+    fulldim=d^N
+    counter=0;
+    code=Dict()
+    index=Dict()
+    for i=0:fulldim-1
+        if statecheck(i)
+            counter+=1;
+            code[counter]=i;
+            index[i]=counter;  
+        end
+    end
+    dim=counter
+    ED=EDtable(code,index,nothing,dim,N,d)
+    return ED
 end
 
 
-function genHmat(Hcode,ED::EDtable)
+function generateHmat(Hcode,ED::EDtable)
     #Hcode: takes a computational basis |a>  and generate H|a>
     dim=ED.dim
     Hmat=zeros(dim,dim)
     for i=1:dim
-        outvec=Hcode(ED.state[i],ED)
+        outvec=Hcode(ED.code[i],ED)
         Hmat[:,i]=outvec
     end
     return Hmat
@@ -22,16 +61,25 @@ end
 
 
 #some tools
-function printstate(state,ED::EDtable;tol=1E-12) #printour the state with nonzero amplitudes
-dim=ED.dim
-L=ED.L
-base=ED.base
+function printψ(ψ,ED::EDtable;tol=1E-16) #printour the state with nonzero amplitudes
+    dim=ED.dim
+    N=ED.N
+    d=ED.d
     for i=1:dim
-        if abs(state[i])>tol
-            println(state[i],"\t",codetobasis(ED.state[i],L,base))
+        if abs(ψ[i])>tol
+            println(ψ[i],"\t",codetobasis(ED.code[i],N,d))
         end
     end    
 end
+
+#function for calculate evolution operator 
+function generateUt(E,S,Δt)
+    eiEt=exp.(-1.0im*Δt*E)
+    Ut=S*Diagonal(eiEt)*S'
+    return Ut
+end
+
+####not yet modified below--------------------------------------------------------------
 
 #Loading EDtable data if exist; if not, construct it
 function EDtabledata(L,symf,statecheck,filename)
@@ -103,38 +151,6 @@ function loadEDdata(EDfilename)
     end
 end
 
-#functions for ED
-function codetobasis(a::Int64,L::Int64,base=2) #convert a state code a to basis, e.g. 1=0000001
-    basis=zeros(Int64,L);
-    temp=a;
-    for i=1:L
-        basis[i]=rem(temp,base);
-        temp=div(temp,base);
-    end
-    return basis;    
-end
-
-num2basis(a::Int64,L::Int64,base=2)=codetobasis(a,L,base)
-
-#basis to number converter
-function basistocode(basis::Array{Int64},base=2)
-    temp=0;
-    for i=1:length(basis)
-        temp+=basis[i]*base^(i-1);
-    end    
-    return temp;  
-end
-
-basis2num(basis::Array{Int64},base=2)=basistocode(basis,base)
-
-
-#function for calculate ED evolution
-function evolution(E,S,Δt)
-    eiEt=exp.(-1.0im*Δt*E)
-    U=S*Diagonal(eiEt)*S'
-    return U
-end
-
 
 function generateEDsym(L::Int64,symf,base=2;tol=1E-14,statecheck= i -> true,symfile = nothing)
    #L: total number of sites
@@ -194,65 +210,6 @@ function loadsymfile(symfilename)
     end
 end
 
-#generate states without any symmetry consideration
-function generateED(L::Int64,base=2;statecheck= i -> true)
-    fulldim=base^L
-    counter=0;
-    state=Dict()
-    index=Dict()
-    for i=0:fulldim-1
-        if statecheck(i)
-            counter+=1;
-            state[counter]=i;
-            index[i]=counter;  
-        end
-    end
-    dim=counter
-    ED=EDtable(state,index,nothing,dim,base,L)
-    return ED
-end
-
-#commonly used symmtry operations in 1d
-#---------------------
-#translation operation
-function translation_code(a::Int64,L::Int64,base=2)
-    basis=codetobasis(a,L,base)
-    Tbasis=zeros(Int64,L);
-    Tbasis[1]=basis[L];
-    Tbasis[2:L]=basis[1:L-1];
-    return basistocode(Tbasis,base)
-end
-
-function translation(vec,ED)
-    outvec=zeros(eltype(vec),ED.dim)
-    for i=1:ED.dim
-       a=ED.state[i]
-       Ta=translation_code(a,ED.L,ED.base)
-       outvec[ED.index[Ta]]+=vec[i]  
-    end
-    return outvec
-end
-
-#space inversion operation
-function inversion_code(a::Int64,L::Int64,base=2)
-   oldarray=codetobasis(a,L,base)
-   newarray=zeros(Int64,L)
-    for i=1:L
-    newarray[i]=oldarray[L-i+1]
-    end
-    return basistocode(newarray,base)
-end
-
-function inversion(vec,ED)
-    outvec=zeros(eltype(vec),ED.dim)
-    for i=1:ED.dim
-       a=ED.state[i]
-       Ia=inversion_code(a,ED.L,ED.base)
-       outvec[ED.index[Ia]]+=vec[i]  
-    end
-    return outvec 
-end
-#--------------------------------------------
 
 
 

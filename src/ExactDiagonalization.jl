@@ -2,12 +2,15 @@ module ExactDiagonalization
 
 using LinearAlgebra, Serialization
 
-include("ED.jl")
-include("Entanglement.jl")
+include("EDfunctions.jl")
+include("1dsymmetry.jl")
+include("entanglement.jl")
 
-export EDtabledata,loadEDtabledata,EDtable,printstate,codetobasis,basistocode,num2basis,basis2num
-export translation_code,translation,inversion_code,inversion,evolution,loadEDdata,EDdata
-export generateEDsym,findrepsym,findrepsymwithlist,generateED,loadsymfile
-export reshapelist,Svon_sym,Svon,Sparsity,EntSpectrum
+#functions from "EDfunctions.jl"
+export EDtable,printψ,codetobasis,basistocode,generateHmat,generateUt
+
+export reshapelist,reshapeψ,Schmidtvalues,entanglemententropy
+
+
 
 end

@@ -1,3 +1,48 @@
+function reshapelist(subA,ED) #subA is the set of sites in subsystem A e.g. subA=[1,3,5]
+    list=Dict();
+    d=ED.d
+    N=ED.N
+    NA=length(subA)
+    fullsys=Array(1:N)
+    subB=setdiff(fullsys,subA)
+    NB=N-NA;
+    dimA=d^NA;
+    dimB=d^NB;
+    for i=1:dimA, j=1:dimB
+        basisA=codetobasis(i-1,NA,d);
+        basisB=codetobasis(j-1,NB,d);
+        code=zeros(N);
+        code[subA]=basisA
+        code[subB]=basisB
+        list[code]=(i,j)
+    end
+    return list,dimA,dimB
+end
+
+function reshapeψ(ψ,subA,ED) #subA is the set of sites in subsystem A e.g. subA=[1,3,5]
+    list,dimA,dimB=reshapelist(subA,ED);
+    Mψ=zeros(dimA,dimB)
+    for code in keys(list)
+        M[list[code]...]=ψ[ED.index[code]];
+    end
+    return Mψ
+end
+
+function Schmidtdecomposition(ψ,subA,ED)
+    Mψ=reshapeψ(ψ,subA,ED) 
+    U,S,V=svd(Mψ)
+    return U,S,V 
+end
+
+function entanglemententropy(ψ,subA,ED)
+    _,spec,_ = Schmidtdecomposition(ψ,subA,ED)
+    return - spec .^2 .* (log.(spec.^2))
+end
+
+
+
+
+#Not yet modified ------------------------------------------
 #functions for entanglement calculation
 function Svon_sym(LA,ψ,ED,symmetry) #calculate von Neumann entropy with subsys LA of a pure state ψ
     base=ED.base
@@ -22,20 +67,6 @@ function Svon_sym(LA,ψ,ED,symmetry) #calculate von Neumann entropy with subsys 
     return EE
 end
 
-function reshapelist(LA,ED)
-    list=Dict();
-    base=ED.base
-    L=ED.L
-    LB=L-LA 
-    for i=1:base^LA, j=1:base^LB
-        intA=num2basis(i-1,LA,base);
-        intB=num2basis(j-1,LB,base);
-        append!(intA,intB)
-        sta=basis2num(intA,base)
-        list[sta]=(i,j)
-    end
-    return list
-end
 
 
 #functions for entanglement calculation
